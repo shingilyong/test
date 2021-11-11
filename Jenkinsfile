@@ -19,15 +19,15 @@ spec:
     - sleep
     args:
     - 99d
-  - name: maven
+  - name: maven1
     image: maven
     command:
     - sleep
     args:
     - 99d
 '''
-                }
-            }
+       }
+     }
     stages {
       stage('build maven') {
         steps {
