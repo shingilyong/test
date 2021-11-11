@@ -1,0 +1,79 @@
+pipeline 
+{
+    agent any
+    tools {
+        maven 'maven'
+    }
+    stages {
+        stage('parameter check')
+    	{
+    		steps
+    		{
+    			 echo "Current workspace : ${workspace}"
+    		}
+    	}
+    	stage('clone project') // git login
+    	{
+    	    steps {
+	            git branch: 'master',
+	            credentialsId: 'gitlab-skdev-rootid',
+	            url: 'https://gitlab.skdev.kro.kr/root/spring.git'
+    	    }
+    	}
+        stage('build') 
+        {
+            steps { // maven artifact build - .jar -> in docker image
+            	sh 'pwd'
+                sh 'mvn -f ./pom.xml clean package -D maven.test.skip=true'
+                archiveArtifacts artifacts: '**/target/*.jar', followSymlinks: false
+            }
+        }
+
+        stage('docker') 
+        {
+            steps { // dockerfile build -> harbor push
+                withDockerRegistry(credentialsId: 'harboridpw', url: 'https://harbor.skdev.kro.kr/') {
+                    sh'''
+                    docker build -t docker tag spring harbor.skdev.kro.kr/spring/spring:${BUILD_NUMBER} .
+                    docker push harbor.skdev.kro.kr/spring/spring:${BUILD_NUMBER}
+                    docker tag harbor.skdev.kro.kr/spring/spring:${BUILD_NUMBER} harbor.skdev.kro.kr/spring/spring:latest
+    				docker push harbor.skdev.kro.kr/spring/spring:latest
+    				
+    				IMAGE_DIGEST=$(docker image inspect harbor.skdev.kro.kr/spring/spring:latest -f '{{join .RepoDigests ","}}')
+				    '''
+                }
+            }
+        }
+        stage('argocd')
+        {
+            agent { //docker images (ssh shake image) -> pull image
+                docker {
+                    image 'library/alpine:latest'
+                    args '-u root --privileged'
+                    registryCredentialsId 'harboridpw'
+                    registryUrl 'https://harbor.skdev.kro.kr/'
+                }
+            }
+            steps{ // in docker  clone git - change tag - push git
+                sh'''
+                rm -rf spring-deploy
+                git clone --single-branch --branch helm git@gitlab.skdev.kro.kr:root/spring-deploy.git
+                cd spring-deploy
+                TAG=${BUILD_NUMBER} yq -i e '.image.tag = env(TAG)' values.yaml
+                git add values.yaml && git commit -m "Update image tag" && git push origin helm
+                '''
+            }
+        }
+        stage('clean')
+        {
+            steps
+            {
+                sh '''
+                docker rmi harbor.skdev.kro.kr/spring/spring:${BUILD_NUMBER} -f
+				docker rmi harbor.skdev.kro.kr/spring/spring:latest -f
+				'''
+                cleanWs cleanWhenSuccess: false
+            }
+        }
+    }
+}
