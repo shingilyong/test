@@ -31,6 +31,7 @@ spec:
     stages {
       stage('build maven') {
         steps {
+          container('maven') {
             sh 'ls -al'
             sh 'mvn -f ./pom.xml clean package -D maven.test.skip=true'
              }
