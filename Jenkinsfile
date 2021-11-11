@@ -36,6 +36,7 @@ spec:
             sh 'mvn -f ./pom.xml clean package -D maven.test.skip=true'
              }
            }
+         }
       stage('build kaniko') {
         steps {
           container('kaniko') {
@@ -44,5 +45,4 @@ spec:
             }
         }
     }
-}
 }
