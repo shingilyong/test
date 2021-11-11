@@ -40,8 +40,8 @@ spec:
       items:
       - key: ".dockerconfigjson"
         path: "config.json"
-    imagePullSecrets:
-    - name: harbor-cred
+  imagePullSecrets:
+  - name: harbor-cred
 '''
        }
      }
