@@ -5,7 +5,7 @@ pipeline {
         APP_NAME="spring"
         CI_REGISTRY_USER="admin"
         CI_REGISTRY_PASSWORD="Harbor12345"
-        HARBOR_CREDENTIAL= credentials('admin')
+        HARBOR_CREDENTIAL= credentials('sk-harbor-id')
     }
     agent {
       kubernetes {
