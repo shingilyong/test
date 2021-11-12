@@ -3,8 +3,6 @@ pipeline {
         HARBOR_URL = "harbor.skdev.kro.kr"
         CI_PROJECT_PATH="spring"
         APP_NAME="spring"
-        CI_REGISTRY_USER="admin"
-        CI_REGISTRY_PASSWORD="Harbor12345"
     }
     agent {
       kubernetes {
@@ -58,7 +56,7 @@ spec:
         }
       stage('Deploy') {
         steps {
-          git credentialsId: 'test',
+          git credentialsId: '123',
               branch: 'main',
               url: 'git@github.com:shingilyong/app.git'
           sh "sed -i 's/test:.*\$/test:${BUILD_TAG}/g' deploy.yaml"
