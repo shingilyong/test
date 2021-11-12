@@ -56,6 +56,20 @@ spec:
                 }
             }
         }
+      stage('Deploy') {
+        steps {
+          git credentialsId: 'test',
+              branch: 'main',
+              url: 'git@github.com:shingilyong/app.git'
+          sh "sed -i 's/test:.*\$/test:${BUILD_TAG}/g' deploy.yaml"
+          sh "git add deploy.yaml"
+          sh "git commit -m 'application update ${BUILD_TAG}'"
+          sshagent(credentials: ['test']) {
+            sh "git remote set-url origin git@github.com:shingilyong/app.git"
+            sh "git push -u origin main"
+      }
+    }
+   }
     }
 }
 
