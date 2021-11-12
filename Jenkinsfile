@@ -19,12 +19,24 @@ spec:
     - sleep
     args:
     - 99d
+    volumeMounts:
+    - name: dockerconfigjson
+      mountPath: /kaniko/.docker/
   - name: maven
     image: maven
     command:
     - sleep
     args:
     - 99d
+  volumes:
+  - name: dockerconfigjson
+    secret:
+      secretName: harbor-cred
+      items:
+      - key: ".dockerconfigjson"
+        path: "config.json"
+  imagePullSecrets:
+  - name: harbor-cred
 '''
                 }
             }
